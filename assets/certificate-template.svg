@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="870" viewBox="0 0 1200 870">
+  <rect width="100%" height="100%" fill="#f7fafc" />
+  <text x="600" y="140" text-anchor="middle" style="font-family:Georgia,serif;font-size:40px;fill:#0f172a;font-weight:700">Certificate of Completion</text>
+  <text x="600" y="260" text-anchor="middle" style="font-family:Georgia,serif;font-size:36px;fill:#0f172a;font-weight:700">[Participant Name]</text>
+  <text x="600" y="350" text-anchor="middle" style="font-family:Segoe UI, sans-serif;font-size:18px;fill:#334155">Score: [SCORE] / [TOTAL]</text>
+  <text x="180" y="720" style="font-family:Segoe UI, sans-serif;font-size:14px;fill:#475569">Issued by</text>
+  <text x="180" y="748" style="font-family:Segoe UI, sans-serif;font-size:16px;fill:#0f172a">[ISSUER]</text>
+  <text x="60" y="820" style="font-family:Segoe UI, sans-serif;font-size:12px;fill:#64748b">Certificate ID: [CERTID]</text>
+</svg>

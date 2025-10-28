@@ -1,0 +1,58 @@
+# render.yaml — Fastpitch Quiz Web App (Backend + Frontend + PostgreSQL)
+# One-click deployment — fully Render-compliant
+
+databases:
+  - name: fastpitch-db
+    databaseName: fastpitch
+    plan: free
+
+services:
+  # === Backend Service ===
+  - type: web
+    name: fastpitch-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: |
+      npm install
+      echo "Running DB migrations and seeding..."
+      psql $DATABASE_URL -f migrations.sql || echo "Migrations skipped"
+      psql $DATABASE_URL -f seed_questions.sql || echo "Seeding skipped"
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fastpitch-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        value: https://fastpitch-frontend.onrender.com
+      - key: MAILGUN_DOMAIN
+        value: sandbox4138c0d8453f468ba1d35129548380e1.mailgun.org
+      - key: MAILGUN_SMTP_LOGIN
+        value: koushik@sandbox4138c0d8453f468ba1d35129548380e1.mailgun.org
+      - key: MAILGUN_SMTP_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        value: koushikpattanayak13@gmail.com
+      - key: TEACHER_EMAIL
+        value: koushikpattanayak13@gmail.com
+      - key: CERT_TITLE
+        value: Certified by Puri Softball Association
+      - key: EMAIL_FROM
+        value: "Fastpitch Quiz Team <koushik@sandbox4138c0d8453f468ba1d35129548380e1.mailgun.org>"
+
+  # === Frontend Service (React/Vite) ===
+  - type: web
+    name: fastpitch-frontend
+    env: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://fastpitch-backend.onrender.com
