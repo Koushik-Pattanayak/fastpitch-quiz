@@ -1,1 +1,246 @@
-<!doctype html><html><head><meta charset='utf-8'><title>Fastpitch Quiz</title></head><body><h1>Fastpitch Quiz Frontend (replace with your build)</h1></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Men’s Fastpitch Quiz</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0077c2, #003c7b);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    #category-select {
+      margin-top: 40px;
+      padding: 10px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      border: none;
+      color: #003c7b;
+    }
+    #start-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #00c2ff;
+      color: #003c7b;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #start-btn:hover {
+      background: #00a3d6;
+    }
+    #quiz-container {
+      display: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      padding: 30px;
+      max-width: 600px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .option {
+      display: block;
+      margin: 10px 0;
+      padding: 10px 15px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+    }
+    .option:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.02);
+    }
+    .correct {
+      background: rgba(0, 255, 0, 0.3);
+    }
+    .wrong {
+      background: rgba(255, 0, 0, 0.3);
+    }
+    #next-btn {
+      background: #00c2ff;
+      color: #003c7b;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: none;
+    }
+    #next-btn:hover {
+      background: #00a3d6;
+    }
+    #score-container {
+      display: none;
+      text-align: center;
+      font-size: 1.5em;
+    }
+    #restart-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #00c2ff;
+      color: #003c7b;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #restart-btn:hover {
+      background: #00a3d6;
+    }
+  </style>
+</head>
+<body>
+  <header>🏆 Men’s Fastpitch Quiz</header>
+
+  <div id="category-container">
+    <h2>Select a Category</h2>
+    <select id="category-select">
+      <option value="">-- Choose a Category --</option>
+      <option value="Batting">Batting</option>
+      <option value="Pitching">Pitching</option>
+      <option value="Rules">Rules</option>
+      <option value="Strategy">Strategy</option>
+    </select>
+    <br />
+    <button id="start-btn">Start Quiz</button>
+  </div>
+
+  <div id="quiz-container">
+    <h2 id="question">Loading question...</h2>
+    <div id="options"></div>
+    <button id="next-btn">Next Question</button>
+  </div>
+
+  <div id="score-container">
+    <h2>🏁 Quiz Complete!</h2>
+    <p id="score-text"></p>
+    <button id="restart-btn">Back to Categories</button>
+  </div>
+
+  <script>
+    const API_BASE = "https://fastpitch-quiz.onrender.com/api/questions";
+    const questionElement = document.getElementById("question");
+    const optionsContainer = document.getElementById("options");
+    const nextButton = document.getElementById("next-btn");
+    const scoreContainer = document.getElementById("score-container");
+    const scoreText = document.getElementById("score-text");
+    const restartBtn = document.getElementById("restart-btn");
+    const quizContainer = document.getElementById("quiz-container");
+    const categoryContainer = document.getElementById("category-container");
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedCategory = "";
+
+    document.getElementById("start-btn").addEventListener("click", async () => {
+      const category = document.getElementById("category-select").value;
+      if (!category) {
+        alert("Please select a category first!");
+        return;
+      }
+      selectedCategory = category;
+      await fetchQuestions(category);
+    });
+
+    async function fetchQuestions(category) {
+      try {
+        categoryContainer.style.display = "none";
+        quizContainer.style.display = "block";
+        questionElement.textContent = "Loading questions...";
+
+        const response = await fetch(`${API_BASE}?category=${category}`);
+        questions = await response.json();
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+          questionElement.textContent = "No questions found for this category.";
+          return;
+        }
+        showQuestion();
+      } catch (error) {
+        questionElement.textContent = "Failed to load questions.";
+        console.error(error);
+      }
+    }
+
+    function showQuestion() {
+      const question = questions[currentQuestionIndex];
+      questionElement.textContent = question.question;
+      optionsContainer.innerHTML = "";
+      nextButton.style.display = "none";
+
+      question.options.forEach((option) => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.classList.add("option");
+        btn.addEventListener("click", () => selectAnswer(btn, option, question.answer));
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(button, selected, correct) {
+      const allOptions = document.querySelectorAll(".option");
+      allOptions.forEach((opt) => (opt.disabled = true));
+
+      if (selected === correct) {
+        button.classList.add("correct");
+        score++;
+      } else {
+        button.classList.add("wrong");
+      }
+
+      nextButton.style.display = "block";
+    }
+
+    nextButton.addEventListener("click", () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showScore();
+      }
+    });
+
+    function showScore() {
+      quizContainer.style.display = "none";
+      scoreContainer.style.display = "block";
+      scoreText.textContent = `You scored ${score} out of ${questions.length} in ${selectedCategory}!`;
+    }
+
+    restartBtn.addEventListener("click", () => {
+      score = 0;
+      currentQuestionIndex = 0;
+      scoreContainer.style.display = "none";
+      categoryContainer.style.display = "block";
+    });
+  </script>
+</body>
+</html>
