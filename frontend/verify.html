@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Certificate - Men’s Fastpitch Quiz</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    input {
+      padding: 0.6rem;
+      width: 250px;
+      margin-top: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.5rem;
+      background: #002f6c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Verify Your Certificate</h2>
+    <input type="text" id="certId" placeholder="Enter Certificate ID" />
+    <br />
+    <button onclick="verify()">Verify</button>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    async function verify() {
+      const id = document.getElementById('certId').value.trim();
+      const res = await fetch(`/verify?id=${id}`);
+      const html = await res.text();
+      document.open(); document.write(html); document.close();
+    }
+  </script>
+</body>
+</html>
