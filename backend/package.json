@@ -1,19 +1,21 @@
 {
-  "name": "fastpitch-backend",
+  "name": "fastpitch-quiz-backend",
   "version": "1.0.0",
-  "description": "Backend server for Fastpitch Quiz app",
+  "description": "Backend for Fastpitch Quiz app",
+  "type": "module",
   "main": "server_v4.js",
   "scripts": {
-    "start": "node server_v4.js"
+    "start": "node server_v4.js",
+    "render-build": "echo 'No build step for backend'"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.0",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
     "pdfkit": "^0.13.0",
-    "nodemailer": "^6.9.14",
-    "path": "^0.12.7",
-    "sharp": "^0.33.4",
-    "uuid": "^9.0.1"
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.11"
   }
 }
