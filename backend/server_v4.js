@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.send("Fastpitch Quiz Backend is running 🚀");
 });
 
-// ✅ POST: send certificate email
+// ✅ POST: send certificate email + save record
 app.post("/send-certificate", async (req, res) => {
   try {
     const { name, email, quizTitle, score } = req.body;
@@ -33,7 +33,28 @@ app.post("/send-certificate", async (req, res) => {
     // Generate the certificate PDF
     const certPath = await generateCertificate(name, score, quizTitle);
 
-    // Email transport setup (Render will use environment variables)
+    // Save certificate record
+    const certData = {
+      name,
+      email,
+      quizTitle,
+      score,
+      issuedAt: new Date().toISOString(),
+    };
+
+    const filePath = path.join(process.cwd(), "certificates.json");
+    let existing = [];
+
+    try {
+      existing = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    } catch {
+      existing = [];
+    }
+
+    existing.push(certData);
+    fs.writeFileSync(filePath, JSON.stringify(existing, null, 2));
+
+    // Email transport setup
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -44,7 +65,7 @@ app.post("/send-certificate", async (req, res) => {
       },
     });
 
-    // ✅ Beautiful HTML email template
+    // ✅ HTML Email Template
     const htmlTemplate = `
       <div style="font-family: 'Segoe UI', sans-serif; background-color: #f4f4f7; padding: 20px;">
         <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
@@ -58,7 +79,6 @@ app.post("/send-certificate", async (req, res) => {
             <h2 style="color: #002366;">"${quizTitle}"</h2>
             <p>Your Score: <strong>${score}%</strong></p>
             <p style="margin-top: 15px;">Attached below is your official certificate of achievement.</p>
-            <a href="#" style="display:inline-block; margin-top: 20px; background-color: #C8102E; color:white; text-decoration:none; padding: 12px 20px; border-radius: 6px;">Download Certificate</a>
           </div>
           <div style="background-color: #f0f0f0; color:#555; text-align:center; padding:10px; font-size: 12px;">
             © ${new Date().getFullYear()} Men’s Fastpitch Quiz | fastpitch-quiz.onrender.com
@@ -81,9 +101,9 @@ app.post("/send-certificate", async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-
     console.log(`Certificate sent to ${email}`);
-    res.status(200).json({ message: "Certificate email sent successfully!" });
+
+    res.status(200).json({ message: "Certificate sent and recorded successfully!" });
   } catch (error) {
     console.error("Error sending certificate:", error);
     res.status(500).json({ message: "Error sending certificate", error: error.message });
@@ -91,21 +111,19 @@ app.post("/send-certificate", async (req, res) => {
 });
 
 // ✅ POST: Verify certificate authenticity
-app.post("/verify-certificate", async (req, res) => {
+app.post("/verify-certificate", (req, res) => {
   try {
     const { name, email } = req.body;
 
     console.log(`Verifying certificate for ${name} (${email})`);
 
-    // Simulate a stored record list (you can replace with DB or JSON later)
-    const issuedCertificates = [
-      { name: "John Doe", email: "john@example.com", quizTitle: "Batting", score: 92 },
-      { name: "Jane Smith", email: "jane@example.com", quizTitle: "Rules", score: 88 },
-      // You can add more dummy entries for testing
-    ];
+    const filePath = path.join(process.cwd(), "certificates.json");
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ verified: false, message: "No certificates found." });
+    }
 
-    // Check for a matching certificate
-    const match = issuedCertificates.find(
+    const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const match = data.find(
       (cert) =>
         cert.name.toLowerCase() === name.toLowerCase() &&
         cert.email.toLowerCase() === email.toLowerCase()
@@ -114,7 +132,7 @@ app.post("/verify-certificate", async (req, res) => {
     if (match) {
       res.status(200).json({
         verified: true,
-        message: `✅ Certificate verified for ${match.name} (${match.quizTitle}, Score: ${match.score}%)`,
+        message: `✅ Verified certificate for ${match.name} (${match.quizTitle}, Score: ${match.score}%)`,
         data: match,
       });
     } else {
@@ -125,10 +143,9 @@ app.post("/verify-certificate", async (req, res) => {
     }
   } catch (error) {
     console.error("Error verifying certificate:", error);
-    res.status(500).json({ message: "Server error during verification" });
+    res.status(500).json({ message: "Error verifying certificate" });
   }
 });
-
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
