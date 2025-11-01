@@ -3,56 +3,189 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verify Certificate - Men’s Fastpitch Quiz</title>
+  <title>Verify Certificate | Men’s Fastpitch Quiz</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f4f4f9;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0077c2, #003c7b);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
     }
-    .card {
-      background: white;
-      padding: 2rem 3rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+    header {
+      width: 100%;
       text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+      margin-top: 40px;
+    }
+
+    .logo {
+      width: 100px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+    }
+
     input {
-      padding: 0.6rem;
-      width: 250px;
-      margin-top: 1rem;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: none;
+      font-size: 1em;
+      color: #003c7b;
     }
+
+    input::placeholder {
+      color: #777;
+    }
+
     button {
-      margin-top: 1rem;
-      padding: 0.6rem 1.5rem;
-      background: #002f6c;
-      color: white;
+      width: 100%;
+      padding: 12px;
+      background-color: #00c2ff;
+      color: #003c7b;
       border: none;
       border-radius: 8px;
+      font-weight: bold;
+      font-size: 1em;
       cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #00a3d6;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+      display: none;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .success {
+      background-color: rgba(0, 255, 0, 0.2);
+      border: 1px solid rgba(0, 255, 0, 0.4);
+      color: #00ff7f;
+    }
+
+    .error {
+      background-color: rgba(255, 0, 0, 0.2);
+      border: 1px solid rgba(255, 0, 0, 0.4);
+      color: #ff7373;
+    }
+
+    .neutral {
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+
+    a {
+      color: #00c2ff;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
+  <header>🏅 Verify Certificate</header>
+
   <div class="card">
-    <h2>Verify Your Certificate</h2>
-    <input type="text" id="certId" placeholder="Enter Certificate ID" />
-    <br />
-    <button onclick="verify()">Verify</button>
-    <p id="result"></p>
+    <img src="https://i.ibb.co/T2cv6gP/Energetic-Fastpitch-Softball-Logo.png" alt="Fastpitch Logo" class="logo" />
+    <h2>Men’s Fastpitch Quiz</h2>
+
+    <input type="text" id="name" placeholder="Enter your full name" />
+    <input type="email" id="email" placeholder="Enter your email address" />
+    <button onclick="verifyCertificate()">Verify</button>
+
+    <div id="result" class="result"></div>
   </div>
 
+  <footer>
+    <p>© 2025 Men’s Fastpitch Quiz | <a href="index.html">Back to Home</a></p>
+  </footer>
+
   <script>
-    async function verify() {
-      const id = document.getElementById('certId').value.trim();
-      const res = await fetch(`/verify?id=${id}`);
-      const html = await res.text();
-      document.open(); document.write(html); document.close();
+    async function verifyCertificate() {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const resultDiv = document.getElementById("result");
+
+      resultDiv.style.display = "none";
+
+      if (!name || !email) {
+        showMessage("⚠️ Please enter both name and email.", false);
+        return;
+      }
+
+      showMessage("Verifying, please wait...", true, "neutral");
+
+      try {
+        const response = await fetch("https://fastpitch-quiz-backend.onrender.com/verify-certificate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email }),
+        });
+
+        const data = await response.json();
+
+        if (data.verified) {
+          showMessage(`✅ ${data.message}`, true);
+        } else {
+          showMessage(`❌ ${data.message}`, false);
+        }
+      } catch (error) {
+        showMessage("⚠️ Unable to reach the server. Please try again later.", false);
+      }
+    }
+
+    function showMessage(msg, success, type) {
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.className = "result " + (type === "neutral" ? "neutral" : success ? "success" : "error");
+      resultDiv.innerHTML = msg;
     }
   </script>
 </body>
