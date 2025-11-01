@@ -47,6 +47,28 @@
     #start-btn:hover {
       background: #00a3d6;
     }
+
+#verify-btn {
+  background: linear-gradient(135deg, #00c2ff, #003c7b);
+  border: none;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 194, 255, 0.3);
+}
+
+#verify-btn:hover {
+  background: linear-gradient(135deg, #00a3d6, #002a5c);
+  box-shadow: 0 6px 18px rgba(0, 194, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+    
     #quiz-container {
       display: none;
       background: rgba(255, 255, 255, 0.1);
@@ -131,6 +153,10 @@
     </select>
     <br />
     <button id="start-btn">Start Quiz</button>
+    <button id="verify-btn" onclick="window.location.href='verify.html'">
+  Verify Certificate
+</button>
+
   </div>
 
   <div id="quiz-container">
