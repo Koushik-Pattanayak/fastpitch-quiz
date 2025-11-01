@@ -88,5 +88,45 @@ app.post("/send-certificate", async (req, res) => {
   }
 });
 
+// ✅ POST: Verify certificate authenticity
+app.post("/verify-certificate", async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    console.log(`Verifying certificate for ${name} (${email})`);
+
+    // Simulate a stored record list (you can replace with DB or JSON later)
+    const issuedCertificates = [
+      { name: "John Doe", email: "john@example.com", quizTitle: "Batting", score: 92 },
+      { name: "Jane Smith", email: "jane@example.com", quizTitle: "Rules", score: 88 },
+      // You can add more dummy entries for testing
+    ];
+
+    // Check for a matching certificate
+    const match = issuedCertificates.find(
+      (cert) =>
+        cert.name.toLowerCase() === name.toLowerCase() &&
+        cert.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (match) {
+      res.status(200).json({
+        verified: true,
+        message: `✅ Certificate verified for ${match.name} (${match.quizTitle}, Score: ${match.score}%)`,
+        data: match,
+      });
+    } else {
+      res.status(404).json({
+        verified: false,
+        message: "❌ Certificate not found. Please check your name and email.",
+      });
+    }
+  } catch (error) {
+    console.error("Error verifying certificate:", error);
+    res.status(500).json({ message: "Server error during verification" });
+  }
+});
+
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
