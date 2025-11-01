@@ -4,6 +4,8 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import { generateCertificate } from "./render_certificate.js";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
