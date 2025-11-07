@@ -66,30 +66,37 @@ app.post("/login", (req, res) => {
   const user = users.find(u => u.email === email && u.password === password);
   if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-  const token = jwt.sign({ email }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
+  const token = jwt.sign({ email, name: user.name }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
   res.json({ token, name: user.name });
 });
 
-// ✅ Auth check route
-app.get("/auth-check", (req, res) => {
+// ✅ Auth middleware
+function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "No token provided" });
 
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
-    res.json({ valid: true, email: decoded.email });
+    req.user = decoded;
+    next();
   } catch {
-    res.status(401).json({ valid: false, message: "Invalid token" });
+    res.status(401).json({ message: "Invalid or expired token" });
   }
+}
+
+// ✅ Auth check route
+app.get("/auth-check", authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
 // ---------------------------------------------------
-// 🏅 CERTIFICATE GENERATION
+// 🏅 CERTIFICATE GENERATION (Protected Route)
 // ---------------------------------------------------
-app.post("/send-certificate", async (req, res) => {
+app.post("/send-certificate", authenticateToken, async (req, res) => {
   try {
-    const { name, email, quizTitle, score } = req.body;
+    const { quizTitle, score } = req.body;
+    const { name, email } = req.user; // from token (so it’s authenticated)
 
     console.log(`Generating certificate for ${name} (${email})`);
 
