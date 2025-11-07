@@ -6,6 +6,7 @@ import { generateCertificate } from "./render_certificate.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ const app = express();
 app.use(cors({
   origin: ["https://fastpitch-quiz-frontend.onrender.com", "http://localhost:3000"],
   methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"]
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(bodyParser.json());
@@ -23,7 +24,69 @@ app.get("/", (req, res) => {
   res.send("Fastpitch Quiz Backend is running 🚀");
 });
 
-// ✅ POST: send certificate email + save record
+// ---------------------------------------------------
+// 🧩 PLAYER LOGIN & REGISTER
+// ---------------------------------------------------
+const USERS_FILE = path.join(process.cwd(), "users.json");
+
+// ✅ Register route
+app.post("/register", (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password)
+    return res.status(400).json({ message: "All fields are required" });
+
+  let users = [];
+  try {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    users = [];
+  }
+
+  if (users.find(u => u.email === email)) {
+    return res.status(400).json({ message: "Email already registered" });
+  }
+
+  const newUser = { name, email, password };
+  users.push(newUser);
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+
+  res.json({ message: "Registration successful!" });
+});
+
+// ✅ Login route
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  let users = [];
+  try {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    users = [];
+  }
+
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+  const token = jwt.sign({ email }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
+  res.json({ token, name: user.name });
+});
+
+// ✅ Auth check route
+app.get("/auth-check", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "No token provided" });
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+    res.json({ valid: true, email: decoded.email });
+  } catch {
+    res.status(401).json({ valid: false, message: "Invalid token" });
+  }
+});
+
+// ---------------------------------------------------
+// 🏅 CERTIFICATE GENERATION
+// ---------------------------------------------------
 app.post("/send-certificate", async (req, res) => {
   try {
     const { name, email, quizTitle, score } = req.body;
@@ -110,7 +173,9 @@ app.post("/send-certificate", async (req, res) => {
   }
 });
 
-// ✅ POST: Verify certificate authenticity
+// ---------------------------------------------------
+// ✅ VERIFY CERTIFICATE
+// ---------------------------------------------------
 app.post("/verify-certificate", (req, res) => {
   try {
     const { name, email } = req.body;
@@ -147,5 +212,6 @@ app.post("/verify-certificate", (req, res) => {
   }
 });
 
+// ---------------------------------------------------
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
