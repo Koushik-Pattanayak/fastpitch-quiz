@@ -4,32 +4,32 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(null);
 
+  // ✅ On page load, check if user already logged in
   useEffect(() => {
-    if (token) {
-      fetch("https://fastpitch-quiz-backend.onrender.com/auth-check", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.valid) setUser({ email: data.email });
-          else logout();
-        })
-        .catch(() => logout());
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
     }
-  }, [token]);
+  }, []);
 
-  const login = (token, userData) => {
-    setToken(token);
+  // ✅ Login and store user info
+  const login = (jwtToken, userData) => {
+    setToken(jwtToken);
     setUser(userData);
-    localStorage.setItem("token", token);
+    localStorage.setItem("token", jwtToken);
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
+  // ✅ Logout and clear storage
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   return (
