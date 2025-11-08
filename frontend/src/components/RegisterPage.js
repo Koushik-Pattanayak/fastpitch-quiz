@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+const API_BASE = "https://fastpitch-quiz.onrender.com"; // ✅ Correct backend URL
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -11,18 +13,21 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("Registering...");
+
     try {
-      const res = await fetch("https://fastpitch-quiz-backend.onrender.com/register", {
+      const res = await fetch(`${API_BASE}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
+
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message);
-      setMessage("Registration successful! Please login.");
+      setMessage("✅ Registration successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setMessage(err.message);
+      setMessage(err.message || "❌ Server not reachable.");
     }
   };
 
