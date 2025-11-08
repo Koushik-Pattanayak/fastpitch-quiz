@@ -2,6 +2,8 @@ import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+const API_BASE = "https://fastpitch-quiz.onrender.com"; // ✅ Correct backend URL
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,19 +13,26 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMessage("Logging in...");
+    setMessage("⏳ Logging in...");
+
     try {
-      const res = await fetch("https://fastpitch-quiz.onrender.com/login", {
+      const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+
+      if (!res.ok) throw new Error(data.message || "Invalid login credentials.");
+
+      // Save auth token + user info via context
       login(data.token, { name: data.name, email });
-      navigate("/quiz");
+
+      setMessage("✅ Login successful! Redirecting...");
+      setTimeout(() => navigate("/quiz"), 1000);
     } catch (err) {
-      setMessage(err.message);
+      setMessage(`❌ ${err.message}`);
     }
   };
 
@@ -52,7 +61,7 @@ export default function LoginPage() {
       <p style={{ marginTop: "10px" }}>
         Don’t have an account? <Link to="/register">Register</Link>
       </p>
-      <p style={{ color: "red" }}>{message}</p>
+      {message && <p style={{ color: "red", marginTop: "10px" }}>{message}</p>}
     </div>
   );
 }
