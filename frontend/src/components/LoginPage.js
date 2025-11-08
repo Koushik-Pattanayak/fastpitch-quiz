@@ -13,7 +13,7 @@ export default function LoginPage() {
     e.preventDefault();
     setMessage("Logging in...");
     try {
-      const res = await fetch("https://fastpitch-quiz-backend.onrender.com/login", {
+      const res = await fetch("https://fastpitch-quiz.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
