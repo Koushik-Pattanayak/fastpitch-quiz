@@ -2,39 +2,47 @@ import React, { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+// Read API URL from Vite env var
+export const API_BASE = import.meta.env.VITE_API_URL || "https://fastpitch-quiz.onrender.com";
 
-  // ✅ On page load, check if user already logged in
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => localStorage.getItem("fp_token") || null);
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem("fp_user");
+    return raw ? JSON.parse(raw) : null;
+  });
+
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    if (token) {
+      localStorage.setItem("fp_token", token);
+    } else {
+      localStorage.removeItem("fp_token");
     }
-  }, []);
+  }, [token]);
 
-  // ✅ Login and store user info
-  const login = (jwtToken, userData) => {
-    setToken(jwtToken);
-    setUser(userData);
-    localStorage.setItem("token", jwtToken);
-    localStorage.setItem("user", JSON.stringify(userData));
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("fp_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("fp_user");
+    }
+  }, [user]);
+
+  const login = (newToken, userInfo) => {
+    setToken(newToken);
+    setUser(userInfo || null);
   };
 
-  // ✅ Logout and clear storage
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
   };
 
+  const getAuthHeader = () => (token ? { Authorization: `Bearer ${token}` } : {});
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, getAuthHeader, API_BASE }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
